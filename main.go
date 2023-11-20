@@ -17,6 +17,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "index.html")
 }
 
+func wavesHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "waves.js")
+}
+func ff(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "24.2.3.1.0.wav")
+}
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		response := JsonResponse{
@@ -87,7 +94,9 @@ func sendJsonResponse(w http.ResponseWriter, statusCode int, data interface{}) {
 
 func main() {
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/waves.js", wavesHandler)
 	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/24.2.3.1.0.wav", ff)
 
 	port := 8080
 	fmt.Printf("Server listening on :%d\n", port)

@@ -44,7 +44,7 @@
     .row.dragging {
         opacity: 0.5;
     }
-        
+
     /* Add a modal style */
     .modal {
         display: none;
@@ -105,6 +105,16 @@
         <div class="modal-content" id="modalContent">
             <!-- File name will be displayed here -->
             <div id="fileName"></div>
+            <div id="waveform"></div>
+            <p>
+                <label>
+                    <input type="checkbox" checked="${loop}" />
+                    Loop regions
+                </label>
+                <label style="margin-left: 2em">
+                    Zoom: <input type="range" min="10" max="1000" value="10" />
+                </label>
+            </p>
             <!-- Radio options for "One shot" and "Continuous" -->
             <div class="radio-options">
                 <label><input type="radio" name="uploadType" value="oneShot"> One shot</label>
@@ -114,8 +124,112 @@
             <button onclick="uploadFormToServer()">Submit</button>
         </div>
     </div>
+    <!-- <script type="module" src="/waves.js"></script> -->
+    <script type="module">
+        import { WaveSurferG, RegionsPluginG } from "/waves.js";
+        window.WaveSurf = WaveSurferG;
+        window.RegionsPlugin = RegionsPluginG;
+    </script>
     <script>
     $(document).ready(function() {
+        const wsf = window.WaveSurf.create({
+            container: '#waveform',
+            waveColor: 'rgb(200, 0, 200)',
+            progressColor: 'rgb(100, 0, 100)',
+            url: '/24.2.3.1.0.wav',
+        });
+        const wsRegions = wsf.registerPlugin(window.RegionsPlugin.create())
+        const random = (min, max) => Math.random() * (max - min) + min
+        const randomColor = () =>
+            `rgba(${random(0, 255)}, ${random(0, 255)}, ${random(0, 255)}, 0.5)`
+        wsf.on('decode', () => {
+            // Regions
+            wsRegions.addRegion({
+                start: 0,
+                end: 8,
+                content: 'Resize me',
+                color: randomColor(),
+                drag: false,
+                resize: true,
+            })
+            wsRegions.addRegion({
+                start: 9,
+                end: 10,
+                content: 'Cramped region',
+                color: randomColor(),
+                minLength: 1,
+                maxLength: 10,
+            })
+            wsRegions.addRegion({
+                start: 12,
+                end: 17,
+                content: 'Drag me',
+                color: randomColor(),
+                resize: false,
+            })
+
+            // Markers (zero-length regions)
+            wsRegions.addRegion({
+                start: 19,
+                content: 'Marker',
+                color: randomColor(),
+            })
+            wsRegions.addRegion({
+                start: 20,
+                content: 'Second marker',
+                color: randomColor(),
+            })
+        });
+
+        wsRegions.enableDragSelection({
+            color: 'rgba(255, 0, 0, 0.1)',
+        })
+
+        wsRegions.on(
+            'region-updated', (region) => { console.log('Updated region', region) })
+
+        // Loop a region on click
+        let loop = true
+        // Toggle looping with a checkbox
+        document.querySelector('input[type="checkbox"]').onclick =
+            (e) => {
+                loop = e.target.checked
+            }
+
+        {
+            let activeRegion = null
+            wsRegions.on('region-in', (region) => { activeRegion = region })
+            wsRegions.on('region-out', (region) => {
+                if (activeRegion === region) {
+                    if (loop) {
+                        region.play()
+                    } else {
+                        activeRegion = null
+                    }
+                }
+            })
+            wsRegions.on('region-clicked', (region, e) => {
+                e.stopPropagation() // prevent triggering a click on the waveform
+                activeRegion = region
+                region.play()
+                region.setOptions({ color: randomColor() })
+            })
+            // Reset the active region when the user clicks anywhere in the waveform
+            wsf.on('interaction', () => {
+                activeRegion = null
+            })
+        }
+
+        // Update the zoom level on slider change
+        wsf.once('decode', () => {
+            document.querySelector('input[type="range"]').oninput = (e) => {
+                const minPxPerSec = Number(e.target.value)
+                wsf.zoom(minPxPerSec)
+            }
+        });
+
+
+
         // Enable drag-and-drop for existing rows
         $('.row').on('dragstart', function(event) {
             event.originalEvent.dataTransfer.setData('text/plain', $(this).text());
