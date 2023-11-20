@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop Example</title>
+    <style>
+        body {
+        font-family: 'Arial', sans-serif;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .box-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    .box {
+        width: 90%;
+        height: 100px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 5px;
+        overflow: auto;
+        /* Add this property for the scrollbar */
+    }
+
+    .row {
+        background-color: #4CAF50;
+        color: #fff;
+        padding: 10px;
+        margin: 5px 0;
+        cursor: move;
+    }
+
+
+    /* Add a modal style */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.7);
+        padding-top: 60px;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+
+      /* Style for the radio options */
+        .radio-options {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .radio-options label {
+            margin-right: 20px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+
+<body>
+    <div class="box-container">
+        <div class="box" id="box1" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box2" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box3" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box4" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box5" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box6" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box7" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box8" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box9" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box10" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box11" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box12" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box13" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box14" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box15" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+        <div class="box" id="box16" ondrop="drop(event)" ondragenter="allowDrop(event)" ondragover="allowDrop(event)"></div>
+    </div>
+    <!-- The modal container -->
+    <div id="myModal" class="modal">
+        <div class="modal-content" id="modalContent">
+            <!-- File name will be displayed here -->
+            <div id="fileName"></div>
+            <!-- Radio options for "One shot" and "Continuous" -->
+            <div class="radio-options">
+                <label><input type="radio" name="uploadType" value="oneShot"> One shot</label>
+                <label><input type="radio" name="uploadType" value="continuous"> Continuous</label>
+            </div>
+            <!-- Button to submit the form -->
+            <button onclick="uploadFormToServer()">Submit</button>
+        </div>
+    </div>
+    <script>
+    $(document).ready(function() {
+        // Enable drag-and-drop for existing rows
+        $('.row').on('dragstart', function(event) {
+            event.originalEvent.dataTransfer.setData('text/plain', $(this).text());
+            $(this).addClass('dragging');
+        });
+
+        // Enable drag-and-drop for dynamically added rows
+        $('.box').on('dragover', function(event) {
+            event.preventDefault();
+        });
+
+        $('.box').on('drop', function(event) {
+            event.preventDefault();
+            var data = event.originalEvent.dataTransfer.getData('text/plain');
+            var draggedElement = $('.dragging');
+
+            // Check if the drop target is not the original box
+            if (!$(this).is(draggedElement.parent())) {
+                $(this).append(draggedElement);
+            }
+
+            // Remove the 'dragging' class
+            draggedElement.removeClass('dragging');
+        });
+
+
+        // Double-click event to open modal
+        $(document).on('dblclick', '.row', function() {
+            var fileName = $(this).text();
+            // Update modal content
+            $('#fileName').text('File Name: ' + fileName);
+            // Display the modal
+            $('#myModal').css('display', 'block');
+        });
+
+        // Close the modal if the user clicks outside of it
+        $(window).on('click', function(event) {
+            var modal = $('#myModal');
+            if (event.target == modal[0]) {
+                modal.css('display', 'none');
+            }
+        });
+    });
+    // Function to upload the form to the server
+    function uploadFormToServer() {
+        var fileName = $('#fileName').text().replace('File Name: ', '');
+        var uploadType = $('input[name="uploadType"]:checked').val();
+
+        // Add your logic to handle form submission to the server
+        console.log(`Uploading form for file ${fileName} with upload type ${uploadType}`);
+        // You should replace the following line with actual server-side code.
+        // The server code should handle the form data and respond accordingly.
+        // fetch('your-server-upload-endpoint', {
+        //     method: 'POST',
+        //     body: JSON.stringify({ fileName, uploadType }),
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //     console.log('Form submitted:', data);
+        // })
+        // .catch(error => {
+        //     console.error('Error submitting form:', error);
+        // });
+
+        // Close the modal after submitting the form
+        $('#myModal').css('display', 'none');
+    }
+    // Function to handle file drop
+    function drop(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+        console.log(event.dataTransfer);
+
+        var boxId = event.target.id;
+        var files = event.dataTransfer.files;
+
+        // Add a new row for each dropped file
+        for (var i = 0; i < files.length; i++) {
+            var fileName = files[i].name;
+            $('#' + boxId)
+                .append('<div class="row" draggable="true">' + fileName + '</div>');
+
+            // Enable drag-and-drop for the newly added row
+            $('#' + boxId + ' .row:last-child').on('dragstart', function(event) {
+                event.originalEvent.dataTransfer.setData('text/plain', $(this).text());
+                $(this).addClass('dragging');
+            });
+
+            // Upload the file to the server
+            uploadFile(files[i]);
+        }
+    }
+
+    // Function to allow dropping files
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+
+    // Function to upload a file to the server
+    function uploadFile(file) {
+        console.log(`uploading ${file.name}`);
+        var formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('File uploaded:', data);
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+            });
+    }
+    </script>
+</body>
+
+</html>
